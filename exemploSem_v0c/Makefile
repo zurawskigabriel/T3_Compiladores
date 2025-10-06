@@ -1,7 +1,7 @@
-# only works with the Java extension of yacc: 
+# only works with the Java extension of yacc:
 # byacc/j from http://troi.lincom-asg.com/~rjamison/byacc/
 
-JFLEX  = jflex 
+JFLEX  = jflex
 BYACCJ = byaccj -tv -J
 JAVAC  = javac
 
