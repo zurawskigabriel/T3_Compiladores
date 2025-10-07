@@ -1,0 +1,171 @@
+# T3 Compiladores - Análise Semântica
+
+## Grupo t3-06:
+- Felipe Conzatti Frison
+- Lucas Schwartz dos Santos
+- Gabriel Zurawski de Souza
+
+## 📋 Enunciado da Tarefa
+
+**Tarefa 3 - Análise semântica**
+- Atividade individual ou em grupos de até 4 alunos
+- Prazo: até o dia da prova P2, até as 23:59h
+- Definição dos grupos e sala de entrega no card TDE
+
+### Objetivo
+Alterar o código exemplo visto em aula (versão com arrays) para realizar **verificação semântica de structs**.
+
+### Requisitos
+1. **Reconhecer a declaração de structs** e gerar uma tabela de símbolos. Exemplo de saída em T3/corretoStructSaida.png
+2. **Verificar se o programa está semanticamente correto** ou identificar erros semânticos. Exemplo de saída T3/erradoStructSaida.png
+
+## 📁 Estrutura do Projeto
+
+### `exemploSem_v0c/` - Versão Básica
+Implementação básica do compilador sem suporte a arrays.
+
+**Arquivos principais:**
+- `exemploSem.flex` - Analisador léxico (JFlex)
+- `exemploSem.y` - Gramática e analisador sintático (YACC)
+- `TabSimb.java` - Implementação da tabela de símbolos
+- `TS_entry.java` - Entrada da tabela de símbolos
+- `ClasseID.java` - Classificação de identificadores
+
+### `exemploSem_v0_array/` - Versão com Arrays
+Versão estendida que inclui suporte para **arrays** (base para implementar structs).
+
+**Arquivos adicionais:**
+- `erroArray.txt` - Exemplo de erro com arrays
+- `novo.txt` - Aparentemente um arquivo de teste perdido
+
+### `T3/` - Arquivos da Tarefa
+Implementar o T3 nesse diretório. Já está nele, para ser modificado, cópias de todos os arquivos que estão no diretório exemploSem_v0_array/.
+
+- `corretoStruct.txt` - Exemplo de programa correto com structs
+- `erroStruct.txt` - Exemplo de programa com erros semânticos em structs
+- `Enunciado.txt` - Descrição completa da tarefa
+
+## 🔧 Como Compilar
+
+### Pré-requisitos
+- Java instalado
+- JFlex.jar (incluído)
+- yacc.exe ou yacc.linux (incluídos)
+
+### Para `exemploSem_v0c/`:
+```bash
+cd exemploSem_v0c
+make
+```
+
+### Para `exemploSem_v0_array/`:
+```bash
+cd exemploSem_v0_array
+make
+```
+
+### Possíveis problemas:
+Se encontrar erro com `byaccj`, edite o Makefile:
+```makefile
+BYACCJ = ./yacc.linux -tv -J  # Para Linux/WSL
+# ou
+BYACCJ = ./yacc.exe -tv -J    # Para Windows
+```
+
+## 🚀 Como Executar
+
+Dentro de qualquer um dos diretórios:
+
+### Compilar e executar:
+```bash
+make run
+```
+
+### Apenas compilar:
+```bash
+make build
+```
+
+### Limpar arquivos gerados:
+```bash
+make clean
+```
+
+### Testar com arquivos de exemplo:
+```bash
+java Parser < correto.txt
+java Parser < erro1.txt
+java Parser < erro2.txt
+```
+
+## 🔄 Pipeline de Compilação
+
+### Dependências e Fluxo:
+
+```
+exemploSem.flex → [JFlex] → Yylex.java
+exemploSem.y → [YACC] → Parser.java
+```
+
+### Processo completo:
+
+1. **exemploSem.flex**
+   - Especificação do analisador léxico
+   - **Processado por:** JFlex.jar
+   - **Gera:** Yylex.java (analisador léxico)
+
+2. **exemploSem.y**
+   - Gramática e regras semânticas
+   - **Processado por:** yacc.exe/yacc.linux
+   - **Gera:** Parser.java (analisador sintático/semântico)
+
+3. **Compilação Java:**
+   ```
+   TS_entry.java + TabSimb.java + Yylex.java + Parser.java
+   ↓ [javac]
+   Parser.class (executável final)
+   ```
+
+### Responsabilidades dos componentes:
+
+- **Yylex.java**: Análise léxica (tokens)
+- **Parser.java**: Análise sintática e semântica
+- **TabSimb.java**: Gerenciamento da tabela de símbolos
+- **TS_entry.java**: Representação de entradas na tabela de símbolos
+- **ClasseID.java**: Classificação de identificadores (variáveis, tipos, etc.)
+
+## 📝 Exemplos de Teste
+
+### Programa correto (`corretoStruct.txt`):
+```c
+struct DATA {
+   int dia;
+   int mes;
+   int ano;
+};
+
+DATA d1;
+d1.dia = 4;
+d1.mes = 12;
+```
+
+### Programa com erro (`erroStruct.txt`):
+```c
+struct DATA {
+   int dia;
+   int mes;
+};
+
+DATA d1;
+d1.dnasc = d1.dia;        // ERRO: campo 'dnasc' não existe
+i.dia = 26;               // ERRO: 'i' não é struct
+```
+
+## 🎯 Para Implementar (T3)
+
+1. Estender a gramática para reconhecer declarações de struct
+2. Modificar a tabela de símbolos para armazenar informações de struct
+3. Implementar verificações semânticas:
+   - Campos de struct existem
+   - Tipos são compatíveis
+   - Acesso a campos apenas em variáveis struct
