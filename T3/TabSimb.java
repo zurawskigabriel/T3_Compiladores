@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.util.Iterator;
-
 
 public class TabSimb
 {
@@ -11,28 +9,36 @@ public class TabSimb
       lista = new ArrayList<TS_entry>();
     }
 
-    public void insert(TS_entry nodo) {
+    public void insert(TS_entry nodo)
+    {
       lista.add(nodo);
     }
 
-    public void listar() {
-      int cont = 0;
+    public void listar()
+    {
       System.out.println("\n\nListagem da tabela de simbolos:\n");
-      for (TS_entry nodo : lista) {
+      for (TS_entry nodo : lista)
+      {
         System.out.println(nodo);
       }
     }
 
-    public TS_entry pesquisa(String umId) {
-      for (TS_entry nodo : lista) {
-        if (nodo.getId().equals(umId)) {
+    public TS_entry pesquisa(String umId)
+    {
+      for (TS_entry nodo : lista)
+      {
+        if (nodo.getId().equals(umId))
+        {
 	        return nodo;
         }
       }
       return null;
     }
 
-    public ArrayList<TS_entry> getLista() {return lista;}
+    public ArrayList<TS_entry> getLista()
+    {
+      return lista;
+    }
 }
 
 

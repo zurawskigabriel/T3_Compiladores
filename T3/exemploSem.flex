@@ -30,7 +30,7 @@ NL  = \n|\r|\r\n
 
 
 /* operators */
-"+" | 
+"+" |
 "=" |
 ">" |
 ";" |
@@ -39,12 +39,12 @@ NL  = \n|\r|\r\n
 "," |
 "\{" |
 "\}" |
-"\[" | 
+"\[" |
 "\]"    { return (int) yycharat(0); }
 
 "&&" { return Parser.AND; }
 
-{NUM}  { yyparser.yylval = new ParserVal(Integer.parseInt(yytext())); 
+{NUM}  { yyparser.yylval = new ParserVal(Integer.parseInt(yytext()));
          return Parser.NUM; }
 
 int    { return Parser.INT;     }

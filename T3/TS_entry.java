@@ -1,10 +1,3 @@
-import java.util.ArrayList;
-/**
- * Write a description of class Paciente here.
- *
- * @author (your name)
- * @version (a version number or a date)
- */
 public class TS_entry
 {
    private String id;
@@ -14,14 +7,14 @@ public class TS_entry
    private int nroElementos;
    private TS_entry tipoBase;
 
-   private TabSimb locals;
-
    // construtor para arrays
-   public TS_entry(String umId, TS_entry umTipo, ClasseID umaClasse) {
+   public TS_entry(String umId, TS_entry umTipo, ClasseID umaClasse)
+   {
       this(umId, umTipo, umaClasse, 0, null);
    }
 
-   public TS_entry(String umId, TS_entry umTipo, ClasseID umaClasse, int elems, TS_entry tp) {
+   public TS_entry(String umId, TS_entry umTipo, ClasseID umaClasse, int elems, TS_entry tp)
+   {
       id = umId;
       tipo = umTipo;
       classe = umaClasse;
@@ -29,19 +22,23 @@ public class TS_entry
       tipoBase = tp;
    }
 
-   public String getId() {
+   public String getId()
+   {
       return id;
    }
 
-   public TS_entry getTipo() {
+   public TS_entry getTipo()
+   {
       return tipo;
    }
 
-   public TS_entry getTipoBase() {
+   public TS_entry getTipoBase()
+   {
       return tipoBase;
    }
 
-   public String toString() {
+   public String toString()
+   {
       StringBuilder aux = new StringBuilder("");
 
       aux.append("Id: ");
@@ -55,21 +52,19 @@ public class TS_entry
       return aux.toString();
    }
 
-   public String getTipoStr() {
+   public String getTipoStr()
+   {
       return tipo2str(this);
    }
 
-   public String tipo2str(TS_entry tipo) {
-      TS_entry tmp;
+   public String tipo2str(TS_entry tipo)
+   {
       if (tipo == null)  return "null";
       else if (tipo==Parser.Tp_INT)    return "int";
       else if (tipo==Parser.Tp_BOOL)   return "boolean";
-      else if (tipo==Parser.Tp_DOUBLE)  return "double";
-      else if (tipo.getTipo() != null) return  String.format("array(%d,%s)",
-                                                   tipo.nroElementos,
-                                                    tipo2str(tipo.tipoBase));
-
-      else if (tipo==Parser.Tp_ERRO)  return  "_erro_";
+      else if (tipo==Parser.Tp_DOUBLE) return "double";
+      else if (tipo.getTipo() != null) return String.format("array(%d,%s)", tipo.nroElementos, tipo2str(tipo.tipoBase));
+      else if (tipo==Parser.Tp_ERRO)   return  "_erro_";
       else                             return "erro/tp";
    }
 }
