@@ -23,10 +23,11 @@
 
 prog : { currClass = ClasseID.VarGlobal; } dList main ;
 
-dList : decl dList | ;
-
-decl : type  { currentType = (TS_entry)$1; } TArray Lid ';'
+dList : decl dList
+      |
       ;
+
+decl : type  { currentType = (TS_entry)$1; } TArray Lid ';' ;
 
 Lid : Lid  ',' id
     | id
@@ -34,25 +35,21 @@ Lid : Lid  ',' id
 
 id : IDENT   { TS_entry nodo = ts.pesquisa($1);
                 if (nodo != null)
-                    yyerror("(sem) variavel >" + $1 + "< jah declarada");
-                else ts.insert(new TS_entry($1, currentType, currClass));
-              }
-
+                  yyerror("(sem) variavel >" + $1 + "< jah declarada");
+                else
+                  ts.insert(new TS_entry($1, currentType, currClass));
+             }
     ;
 
-TArray : '[' NUM ']'  TArray { currentType = new TS_entry("?", Tp_ARRAY,
-                                                   currClass, $2, currentType); }
-
+TArray : '[' NUM ']'  TArray { currentType = new TS_entry("?", Tp_ARRAY, currClass, $2, currentType); }
        |
        ;
-
-
              //
               // faria mais sentido reconhecer todos os tipos como ident!
               //
-type : INT    { $$ = Tp_INT; }
+type : INT     { $$ = Tp_INT; }
      | DOUBLE  { $$ = Tp_DOUBLE; }
-     | BOOL   { $$ = Tp_BOOL; }
+     | BOOL    { $$ = Tp_BOOL; }
      ;
 
 
@@ -62,37 +59,41 @@ main :  VOID MAIN '(' ')' bloco ;
 bloco : '{' listacmd '}';
 
 listacmd : listacmd cmd
-        |
+         |
          ;
 
 cmd :  exp ';'
-      | IF '(' exp ')' cmd   {  if ( ((TS_entry)$3) != Tp_BOOL)
-                                     yyerror("(sem) expressão (if) deve ser lógica "+((TS_entry)$3).getTipo());
+      | IF '(' exp ')' cmd   {
+                                if (((TS_entry)$3) != Tp_BOOL)
+                                  yyerror("(sem) expressão (if) deve ser lógica "+((TS_entry)$3).getTipo());
                              }
-       ;
+      ;
 
 
-exp : exp '+' exp  { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
+exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
     | exp '>' exp { $$ = validaTipo('>', (TS_entry)$1, (TS_entry)$3); }
     | exp AND exp { $$ = validaTipo(AND, (TS_entry)$1, (TS_entry)$3); }
     | NUM         { $$ = Tp_INT; }
     | '(' exp ')' { $$ = $2; }
     | IDENT       { TS_entry nodo = ts.pesquisa($1);
-                    if (nodo == null) {
+                    if (nodo == null)
+                    {
                       yyerror("(sem) var <" + $1 + "> nao declarada");
                       $$ = Tp_ERRO;
                     }
                     else
+                    {
                       $$ = nodo.getTipo();
+                    }
                   }
      | exp '=' exp  {  $$ = validaTipo(ATRIB, (TS_entry)$1, (TS_entry)$3);  }
      | exp '[' exp ']'  {  if ((TS_entry)$3 != Tp_INT)
-                              yyerror("(sem) indexador não é numérico ");
+                            yyerror("(sem) indexador não é numérico ");
                            else
-                               if (((TS_entry)$1).getTipo() != Tp_ARRAY)
-                                  yyerror("(sem) elemento não indexado ");
-                               else
-                                  $$ = ((TS_entry)$1).getTipoBase();
+                            if (((TS_entry)$1).getTipo() != Tp_ARRAY)
+                              yyerror("(sem) elemento não indexado ");
+                            else
+                              $$ = ((TS_entry)$1).getTipoBase();
                          }
     ;
 
