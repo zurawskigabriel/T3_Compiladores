@@ -21,8 +21,44 @@
 
 %%
 
-prog : { currClass = ClasseID.VarGlobal; } dList main ;
+// Faz o parser de várias declarações intercaladas entre structs e variáveis globais (ALTERADO)
+prog : { currClass = ClasseID.VarGlobal; } globalDeclList main ;
 
+globalDeclList : globalDecl globalDeclList
+               |
+               ;
+
+globalDecl : decl
+           | declStruct
+           ;
+
+// Faz o parser especificamente de declarações de structs (ADICIONADO)
+declStructList : declStruct declStructList
+               |
+               ;
+
+declStruct : STRUCT IDENT {
+                            TS_entry aux = ts.pesquisa($2);
+                            if (aux != null)
+                            {
+                              yyerror("struct >" + $2 + "< jah declarada");
+                            }
+                            else
+                            {
+                              currentStruct = new TS_entry($2, Tp_STRUCT, ClasseID.NomeStruct);
+                              ts.insert(currentStruct);
+                              currClass = ClasseID.CampoStruct;  // Muda contexto para declaração de campos de struct
+                            }
+                          }
+
+                          '{' dList '}' ';' // Parse dos campos da struct
+
+                          {
+                            currentStruct = null;  // Sai do contexto da struct
+                            currClass = ClasseID.VarGlobal;  // Volta ao contexto global para fazer o parse de outras declarações
+                          }
+
+// Faz o parser especificamente de declarações de variáveis globais e de campos de Structs (ALTERADO)
 dList : decl dList
       |
       ;
@@ -33,14 +69,32 @@ Lid : Lid  ',' id
     | id
     ;
 
-id : IDENT   { TS_entry nodo = ts.pesquisa($1);
-                if (nodo != null)
-                  yyerror("(sem) variavel >" + $1 + "< jah declarada");
+id : IDENT   {
+                TS_entry nodo;
+
+                // Verifica o contexto atual
+                if (currClass == ClasseID.CampoStruct && currentStruct != null)
+                {
+                  // Pesquisa e insere na tabela de campos da struct
+                  nodo = currentStruct.getCampos().pesquisa($1);
+                  if (nodo != null)
+                    yyerror("(sem) campo >" + $1 + "< jah declarado na struct");
+                  else
+                    currentStruct.getCampos().insert(new TS_entry($1, currentType, currClass));
+                }
                 else
-                  ts.insert(new TS_entry($1, currentType, currClass));
+                {
+                  // Pesquisa e insere na tabela global
+                  nodo = ts.pesquisa($1);
+                  if (nodo != null)
+                    yyerror("(sem) variavel >" + $1 + "< jah declarada");
+                  else
+                    ts.insert(new TS_entry($1, currentType, currClass));
+                }
              }
     ;
 
+// Todo resto (INALTERADO)
 TArray : '[' NUM ']'  TArray { currentType = new TS_entry("?", Tp_ARRAY, currClass, $2, currentType); }
        |
        ;
@@ -107,6 +161,7 @@ exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
   public static TS_entry Tp_BOOL = new TS_entry("bool", null,  ClasseID.TipoBase);
   public static TS_entry Tp_ARRAY = new TS_entry("array", null,  ClasseID.TipoBase);
   public static TS_entry Tp_ERRO = new TS_entry("_erro_", null,  ClasseID.TipoBase);
+  public static TS_entry Tp_STRUCT = new TS_entry("struct", null,  ClasseID.TipoBase); // (ADICIONADO)
 
   public static final int ARRAY = 1500;
   public static final int ATRIB = 1600;
@@ -114,6 +169,7 @@ exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
   private String currEscopo;
   private ClasseID currClass;
   private TS_entry currentType;
+  private TS_entry currentStruct;  // Guarda a struct sendo declarada
 
   public static void main(String args[]) throws IOException
   {
@@ -152,6 +208,7 @@ exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
     ts.insert(Tp_DOUBLE);
     ts.insert(Tp_BOOL);
     ts.insert(Tp_ARRAY);
+    ts.insert(Tp_STRUCT); // (ADICIONADO)
   }
 
   private int yylex()

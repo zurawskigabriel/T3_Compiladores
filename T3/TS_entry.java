@@ -7,6 +7,9 @@ public class TS_entry
    private int nroElementos;
    private TS_entry tipoBase;
 
+   // tabela para campos da struct
+   private TabSimb campos;  // null se não for struct
+
    // construtor para arrays
    public TS_entry(String umId, TS_entry umTipo, ClasseID umaClasse)
    {
@@ -20,6 +23,10 @@ public class TS_entry
       classe = umaClasse;
       nroElementos = elems;
       tipoBase = tp;
+
+      // Se for uma struct, cria tabela para seus campos
+      if (umaClasse == ClasseID.NomeStruct)
+         campos = new TabSimb();
    }
 
    public String getId()
@@ -55,6 +62,11 @@ public class TS_entry
    public String getTipoStr()
    {
       return tipo2str(this);
+   }
+
+   public TabSimb getCampos()
+   {
+      return campos;
    }
 
    public String tipo2str(TS_entry tipo)

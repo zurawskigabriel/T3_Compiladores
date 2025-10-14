@@ -168,3 +168,9 @@ i.dia = 26;               // ERRO: 'i' não é struct
    - Campos de struct existem
    - Tipos são compatíveis
    - Acesso a campos apenas em variáveis struct
+
+## Observações
+
+1. O caso de teste [corretoStruct.txt](T3/CasosDeTeste/corretoStruct.txt) possui uma declaração de float, e nosso parser suporta só double. Além disso, nosso parser não está lidando corretamente com strings, a qual também possui delcaração em [corretoStruct.txt](T3/CasosDeTeste/corretoStruct.txt) e causa erro, embora o token STRING esteja declarado no [yacc](T3/exemploSem.y) e no [flex](T3/exemploSem.flex). Corrigir isso e deixar em um readme para o Agustini.
+
+2. Nosso parser não identifica instanciação de structs nem operações com seus campos ainda, mas identifica de declaração de structs (aparentemnte).
