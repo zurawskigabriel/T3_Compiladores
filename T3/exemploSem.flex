@@ -37,6 +37,7 @@ NL  = \n|\r|\r\n
 "(" |
 ")" |
 "," |
+"." | // Adicionado para suportar acesso a membros de struct
 "\{" |
 "\}" |
 "\[" |
@@ -49,6 +50,7 @@ NL  = \n|\r|\r\n
 
 int    { return Parser.INT;     }
 double  { return Parser.DOUBLE;   }
+float   { return Parser.DOUBLE;   } // Float agora é mapeado para double
 bool   { return Parser.BOOL; }
 string { return Parser.STRING; }
 void { return Parser.VOID; }

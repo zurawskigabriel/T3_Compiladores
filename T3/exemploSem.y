@@ -13,6 +13,7 @@
 %left '+'
 %left AND
 %left '['
+%left '.' // Adicionado pro acesso a campos de struct
 
 %type <sval> IDENT
 %type <ival> NUM
@@ -21,7 +22,7 @@
 
 %%
 
-// Faz o parser de várias declarações intercaladas entre structs e variáveis globais (ALTERADO)
+// Faz o parser de várias declarações intercaladas entre structs e variáveis globais
 prog : { currClass = ClasseID.VarGlobal; } globalDeclList main ;
 
 globalDeclList : globalDecl globalDeclList
@@ -32,7 +33,7 @@ globalDecl : decl
            | declStruct
            ;
 
-// Faz o parser especificamente de declarações de structs (ADICIONADO)
+// Faz o parser especificamente de declarações de structs
 declStructList : declStruct declStructList
                |
                ;
@@ -58,7 +59,7 @@ declStruct : STRUCT IDENT {
                             currClass = ClasseID.VarGlobal;  // Volta ao contexto global para fazer o parse de outras declarações
                           }
 
-// Faz o parser especificamente de declarações de variáveis globais e de campos de Structs (ALTERADO)
+// Faz o parser especificamente de declarações de variáveis globais e de campos de Structs
 dList : decl dList
       |
       ;
@@ -94,7 +95,6 @@ id : IDENT   {
              }
     ;
 
-// Todo resto (INALTERADO)
 TArray : '[' NUM ']'  TArray { currentType = new TS_entry("?", Tp_ARRAY, currClass, $2, currentType); }
        |
        ;
@@ -104,9 +104,25 @@ TArray : '[' NUM ']'  TArray { currentType = new TS_entry("?", Tp_ARRAY, currCla
 type : INT     { $$ = Tp_INT; }
      | DOUBLE  { $$ = Tp_DOUBLE; }
      | BOOL    { $$ = Tp_BOOL; }
+     | STRING  { $$ = Tp_STRING; }
+     | IDENT   { // Tratamento para os tipos definidos pelo usuário
+                 TS_entry nodo = ts.pesquisa($1);
+                 if (nodo == null)
+                 {
+                   yyerror("(sem) tipo <" + $1 + "> nao declarado");
+                   $$ = Tp_ERRO;
+                 }
+                 else if (nodo.getTipo() != Tp_STRUCT)
+                 {
+                   yyerror("(sem) <" + $1 + "> nao eh um tipo struct");
+                   $$ = Tp_ERRO;
+                 }
+                 else
+                 {
+                   $$ = nodo;  // Retorna a entrada da struct
+                 }
+               }
      ;
-
-
 
 main :  VOID MAIN '(' ')' bloco ;
 
@@ -118,8 +134,9 @@ listacmd : listacmd cmd
 
 cmd :  exp ';'
       | IF '(' exp ')' cmd   {
-                                if (((TS_entry)$3) != Tp_BOOL)
-                                  yyerror("(sem) expressão (if) deve ser lógica "+((TS_entry)$3).getTipo());
+                                TS_entry tipoExp = getTipoExp((TS_entry)$3);
+                                if (tipoExp != Tp_BOOL)
+                                  yyerror("(sem) expressão (if) deve ser lógica " + tipoExp.getTipoStr());
                              }
       ;
 
@@ -137,18 +154,60 @@ exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
                     }
                     else
                     {
-                      $$ = nodo.getTipo();
+                      $$ = nodo;  // Retorna a entrada e não apenas o tipo
                     }
                   }
      | exp '=' exp  {  $$ = validaTipo(ATRIB, (TS_entry)$1, (TS_entry)$3);  }
-     | exp '[' exp ']'  {  if ((TS_entry)$3 != Tp_INT)
+     | exp '[' exp ']'  {
+                           TS_entry tipoIndice = getTipoExp((TS_entry)$3);
+                           TS_entry tipoArray = getTipoExp((TS_entry)$1);
+
+                           if (tipoIndice != Tp_INT)
                             yyerror("(sem) indexador não é numérico ");
                            else
-                            if (((TS_entry)$1).getTipo() != Tp_ARRAY)
+                            if (tipoArray.getTipo() != Tp_ARRAY)
                               yyerror("(sem) elemento não indexado ");
                             else
-                              $$ = ((TS_entry)$1).getTipoBase();
+                              $$ = tipoArray.getTipoBase();
                          }
+     | exp '.' IDENT  { // Tratamento para acesso a campos de struct em expressoes
+                        TS_entry expStruct = (TS_entry)$1;
+
+                        // Verifica se o lado esquerdo é uma struct
+                        if (expStruct == Tp_ERRO)
+                        {
+                          $$ = Tp_ERRO;
+                        }
+                        else
+                        {
+                          // Extrai o tipo da expressão
+                          TS_entry tipoExp = getTipoExp(expStruct);
+
+                          // Verifica se o tipo é uma struct
+                          if (tipoExp == null || tipoExp.getTipo() != Tp_STRUCT)
+                          {
+                            yyerror("(sem) operador '.' usado em nao-struct");
+                            $$ = Tp_ERRO;
+                          }
+                          else
+                          {
+                            // Busca o campo na tabela de campos da struct
+                            TS_entry structDef = tipoExp;
+                            TS_entry campo = structDef.getCampos().pesquisa($3);
+
+                            if (campo == null)
+                            {
+                              yyerror("(sem) campo <" + $3 + "> nao existe na struct <" + structDef.getId() + ">");
+                              $$ = Tp_ERRO;
+                            }
+                            else
+                            {
+                              // Retorna o campo (não apenas seu tipo) pra permitir acesso aninhado
+                              $$ = campo;
+                            }
+                          }
+                        }
+                      }
     ;
 
 %%
@@ -159,9 +218,10 @@ exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
   public static TS_entry Tp_INT =  new TS_entry("int", null, ClasseID.TipoBase);
   public static TS_entry Tp_DOUBLE = new TS_entry("double", null,  ClasseID.TipoBase);
   public static TS_entry Tp_BOOL = new TS_entry("bool", null,  ClasseID.TipoBase);
+  public static TS_entry Tp_STRING = new TS_entry("string", null,  ClasseID.TipoBase); // Adicionado pro tipo string, pois o código base não suportava strings
   public static TS_entry Tp_ARRAY = new TS_entry("array", null,  ClasseID.TipoBase);
   public static TS_entry Tp_ERRO = new TS_entry("_erro_", null,  ClasseID.TipoBase);
-  public static TS_entry Tp_STRUCT = new TS_entry("struct", null,  ClasseID.TipoBase); // (ADICIONADO)
+  public static TS_entry Tp_STRUCT = new TS_entry("struct", null,  ClasseID.TipoBase);
 
   public static final int ARRAY = 1500;
   public static final int ATRIB = 1600;
@@ -207,8 +267,9 @@ exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
     ts.insert(Tp_INT);
     ts.insert(Tp_DOUBLE);
     ts.insert(Tp_BOOL);
+    ts.insert(Tp_STRING); // Adicionado pro tipo string, pois o código base não suportava strings
     ts.insert(Tp_ARRAY);
-    ts.insert(Tp_STRUCT); // (ADICIONADO)
+    ts.insert(Tp_STRUCT);
   }
 
   private int yylex()
@@ -244,35 +305,52 @@ exp : exp '+' exp { $$ = validaTipo('+', (TS_entry)$1, (TS_entry)$3); }
 
   public TS_entry validaTipo(int operador, TS_entry A, TS_entry B)
   {
+    // Extrai os tipos das expressões
+    TS_entry tipoA = getTipoExp(A);
+    TS_entry tipoB = getTipoExp(B);
+
     switch (operador)
     {
       case ATRIB:
-            if ((A == Tp_INT && B == Tp_INT) || ((A == Tp_DOUBLE && (B == Tp_INT || B == Tp_DOUBLE))) || (A == B))
-              return A;
+            if ((tipoA == Tp_INT && tipoB == Tp_INT) || ((tipoA == Tp_DOUBLE && (tipoB == Tp_INT || tipoB == Tp_DOUBLE))) || (tipoA == tipoB))
+              return tipoA;
             else
-              yyerror("(sem) tipos incomp. para atribuicao: "+ A.getTipoStr() + " = "+B.getTipoStr());
+              yyerror("(sem) tipos incomp. para atribuicao: "+ tipoA.getTipoStr() + " = "+tipoB.getTipoStr());
             break;
       case '+' :
-            if (A == Tp_INT && B == Tp_INT)
+            if (tipoA == Tp_INT && tipoB == Tp_INT)
               return Tp_INT;
-            else if ( (A == Tp_DOUBLE && (B == Tp_INT || B == Tp_DOUBLE)) || (B == Tp_DOUBLE && (A == Tp_INT || A == Tp_DOUBLE)) )
+            else if ( (tipoA == Tp_DOUBLE && (tipoB == Tp_INT || tipoB == Tp_DOUBLE)) || (tipoB == Tp_DOUBLE && (tipoA == Tp_INT || tipoA == Tp_DOUBLE)) )
               return Tp_DOUBLE;
             else
-              yyerror("(sem) tipos incomp. para soma: "+ A.getTipoStr() + " + "+B.getTipoStr());
+              yyerror("(sem) tipos incomp. para soma: "+ tipoA.getTipoStr() + " + "+tipoB.getTipoStr());
             break;
       case '>' :
-              if ((A == Tp_INT || A == Tp_DOUBLE) && (B == Tp_INT || B == Tp_DOUBLE))
+              if ((tipoA == Tp_INT || tipoA == Tp_DOUBLE) && (tipoB == Tp_INT || tipoB == Tp_DOUBLE))
                 return Tp_BOOL;
               else
-                yyerror("(sem) tipos incomp. para op relacional: "+ A.getTipoStr() + " > "+B.getTipoStr());
+                yyerror("(sem) tipos incomp. para op relacional: "+ tipoA.getTipoStr() + " > "+tipoB.getTipoStr());
               break;
       case AND:
-              if (A == Tp_BOOL && B == Tp_BOOL)
+              if (tipoA == Tp_BOOL && tipoB == Tp_BOOL)
                 return Tp_BOOL;
               else
-                yyerror("(sem) tipos incomp. para op lógica: "+ A.getTipoStr() + " && "+B.getTipoStr());
+                yyerror("(sem) tipos incomp. para op lógica: "+ tipoA.getTipoStr() + " && "+tipoB.getTipoStr());
           break;
       }
       return Tp_ERRO;
+  }
+
+  // Função auxiliar para extrair o tipo de uma expressão
+  // Se a expressão é um tipo base (Tp_INT, etc) retorna ela mesma
+  // Se é uma variável/campo retorna seu tipo
+  public TS_entry getTipoExp(TS_entry exp)
+  {
+    if (exp == Tp_INT || exp == Tp_DOUBLE || exp == Tp_BOOL || exp == Tp_STRING || exp == Tp_ERRO)
+      return exp;
+    else if (exp.getTipo() == null)
+      return exp;  // É um tipo (como uma definição de struct)
+    else
+      return exp.getTipo();
   }
 

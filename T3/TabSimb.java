@@ -39,6 +39,16 @@ public class TabSimb
     {
       return lista;
     }
+
+    public int size()
+    {
+      return lista.size();
+    }
+
+    public TS_entry get(int index)
+    {
+      return lista.get(index);
+    }
 }
 
 

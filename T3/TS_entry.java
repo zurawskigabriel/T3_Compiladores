@@ -55,6 +55,20 @@ public class TS_entry
       aux.append(classe);
       aux.append("\tTipo: ");
       aux.append(tipo2str(this.tipo));
+      
+      // Se for uma struct, lista seus campos
+      if (classe == ClasseID.NomeStruct && campos != null)
+      {
+         aux.append("\n\tCampos da struct:");
+         for (int i = 0; i < campos.size(); i++)
+         {
+            TS_entry campo = campos.get(i);
+            aux.append("\n\t  - ");
+            aux.append(campo.getId());
+            aux.append(": ");
+            aux.append(tipo2str(campo.getTipo()));
+         }
+      }
 
       return aux.toString();
    }
@@ -75,7 +89,10 @@ public class TS_entry
       else if (tipo==Parser.Tp_INT)    return "int";
       else if (tipo==Parser.Tp_BOOL)   return "boolean";
       else if (tipo==Parser.Tp_DOUBLE) return "double";
-      else if (tipo.getTipo() != null) return String.format("array(%d,%s)", tipo.nroElementos, tipo2str(tipo.tipoBase));
+      else if (tipo==Parser.Tp_STRING) return "string";
+      else if (tipo==Parser.Tp_STRUCT) return "struct";
+      else if (tipo.getTipo() != null && tipo.getTipo() == Parser.Tp_STRUCT) return "struct " + tipo.getId();
+      else if (tipo.getTipo() != null && tipo.getTipo() == Parser.Tp_ARRAY) return String.format("array(%d,%s)", tipo.nroElementos, tipo2str(tipo.tipoBase));
       else if (tipo==Parser.Tp_ERRO)   return  "_erro_";
       else                             return "erro/tp";
    }

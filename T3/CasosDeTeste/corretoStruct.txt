@@ -1,5 +1,5 @@
 int i;
-double x;
+float x;
 bool b;
 
 struct DATA {
@@ -10,6 +10,8 @@ struct DATA {
 
 struct ALUNO {
    int matricula;
+   string nome;
+   DATA dnasc;
    bool ativo;
 };
 
