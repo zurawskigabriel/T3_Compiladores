@@ -1,0 +1,16 @@
+struct DATA {
+   int dia;
+   int mes;
+   int ano;
+};
+
+struct ALUNO {
+   int matricula;
+   DATA dnasc;
+};
+
+ALUNO alu1;
+
+void main() {
+   alu1.dnasc.anoNascimento = 1996;
+}

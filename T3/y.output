@@ -1,0 +1,739 @@
+   0  $accept : prog $end
+
+   1  $$1 :
+
+   2  prog : $$1 globalDeclList main
+
+   3  globalDeclList : globalDecl globalDeclList
+   4                 |
+
+   5  globalDecl : decl
+   6             | declStruct
+
+   7  declStructList : declStruct declStructList
+   8                 |
+
+   9  $$2 :
+
+  10  declStruct : STRUCT IDENT $$2 '{' dList '}' ';'
+
+  11  dList : decl dList
+  12        |
+
+  13  $$3 :
+
+  14  decl : type $$3 TArray Lid ';'
+
+  15  Lid : Lid ',' id
+  16      | id
+
+  17  id : IDENT
+
+  18  TArray : '[' NUM ']' TArray
+  19         |
+
+  20  type : INT
+  21       | DOUBLE
+  22       | BOOL
+  23       | STRING
+  24       | IDENT
+
+  25  main : VOID MAIN '(' ')' bloco
+
+  26  bloco : '{' listacmd '}'
+
+  27  listacmd : listacmd cmd
+  28           |
+
+  29  cmd : exp ';'
+  30      | IF '(' exp ')' cmd
+
+  31  exp : exp '+' exp
+  32      | exp '>' exp
+  33      | exp AND exp
+  34      | NUM
+  35      | '(' exp ')'
+  36      | IDENT
+  37      | exp '=' exp
+  38      | exp '[' exp ']'
+  39      | exp '.' IDENT
+
+state 0
+	$accept : . prog $end  (0)
+	$$1 : .  (1)
+
+	.  reduce 1
+
+	prog  goto 1
+	$$1  goto 2
+
+
+state 1
+	$accept : prog . $end  (0)
+
+	$end  accept
+
+
+state 2
+	prog : $$1 . globalDeclList main  (2)
+	globalDeclList : .  (4)
+
+	IDENT  shift 3
+	INT  shift 4
+	DOUBLE  shift 5
+	BOOL  shift 6
+	STRING  shift 7
+	STRUCT  shift 8
+	VOID  reduce 4
+
+	type  goto 9
+	globalDeclList  goto 10
+	globalDecl  goto 11
+	decl  goto 12
+	declStruct  goto 13
+
+
+state 3
+	type : IDENT .  (24)
+
+	.  reduce 24
+
+
+state 4
+	type : INT .  (20)
+
+	.  reduce 20
+
+
+state 5
+	type : DOUBLE .  (21)
+
+	.  reduce 21
+
+
+state 6
+	type : BOOL .  (22)
+
+	.  reduce 22
+
+
+state 7
+	type : STRING .  (23)
+
+	.  reduce 23
+
+
+state 8
+	declStruct : STRUCT . IDENT $$2 '{' dList '}' ';'  (10)
+
+	IDENT  shift 14
+	.  error
+
+
+state 9
+	decl : type . $$3 TArray Lid ';'  (14)
+	$$3 : .  (13)
+
+	.  reduce 13
+
+	$$3  goto 15
+
+
+state 10
+	prog : $$1 globalDeclList . main  (2)
+
+	VOID  shift 16
+	.  error
+
+	main  goto 17
+
+
+state 11
+	globalDeclList : globalDecl . globalDeclList  (3)
+	globalDeclList : .  (4)
+
+	IDENT  shift 3
+	INT  shift 4
+	DOUBLE  shift 5
+	BOOL  shift 6
+	STRING  shift 7
+	STRUCT  shift 8
+	VOID  reduce 4
+
+	type  goto 9
+	globalDeclList  goto 18
+	globalDecl  goto 11
+	decl  goto 12
+	declStruct  goto 13
+
+
+state 12
+	globalDecl : decl .  (5)
+
+	.  reduce 5
+
+
+state 13
+	globalDecl : declStruct .  (6)
+
+	.  reduce 6
+
+
+state 14
+	declStruct : STRUCT IDENT . $$2 '{' dList '}' ';'  (10)
+	$$2 : .  (9)
+
+	.  reduce 9
+
+	$$2  goto 19
+
+
+state 15
+	decl : type $$3 . TArray Lid ';'  (14)
+	TArray : .  (19)
+
+	'['  shift 20
+	IDENT  reduce 19
+
+	TArray  goto 21
+
+
+state 16
+	main : VOID . MAIN '(' ')' bloco  (25)
+
+	MAIN  shift 22
+	.  error
+
+
+state 17
+	prog : $$1 globalDeclList main .  (2)
+
+	.  reduce 2
+
+
+state 18
+	globalDeclList : globalDecl globalDeclList .  (3)
+
+	.  reduce 3
+
+
+state 19
+	declStruct : STRUCT IDENT $$2 . '{' dList '}' ';'  (10)
+
+	'{'  shift 23
+	.  error
+
+
+state 20
+	TArray : '[' . NUM ']' TArray  (18)
+
+	NUM  shift 24
+	.  error
+
+
+state 21
+	decl : type $$3 TArray . Lid ';'  (14)
+
+	IDENT  shift 25
+	.  error
+
+	Lid  goto 26
+	id  goto 27
+
+
+state 22
+	main : VOID MAIN . '(' ')' bloco  (25)
+
+	'('  shift 28
+	.  error
+
+
+state 23
+	declStruct : STRUCT IDENT $$2 '{' . dList '}' ';'  (10)
+	dList : .  (12)
+
+	IDENT  shift 3
+	INT  shift 4
+	DOUBLE  shift 5
+	BOOL  shift 6
+	STRING  shift 7
+	'}'  reduce 12
+
+	type  goto 9
+	decl  goto 29
+	dList  goto 30
+
+
+state 24
+	TArray : '[' NUM . ']' TArray  (18)
+
+	']'  shift 31
+	.  error
+
+
+state 25
+	id : IDENT .  (17)
+
+	.  reduce 17
+
+
+state 26
+	decl : type $$3 TArray Lid . ';'  (14)
+	Lid : Lid . ',' id  (15)
+
+	';'  shift 32
+	','  shift 33
+	.  error
+
+
+state 27
+	Lid : id .  (16)
+
+	.  reduce 16
+
+
+state 28
+	main : VOID MAIN '(' . ')' bloco  (25)
+
+	')'  shift 34
+	.  error
+
+
+state 29
+	dList : decl . dList  (11)
+	dList : .  (12)
+
+	IDENT  shift 3
+	INT  shift 4
+	DOUBLE  shift 5
+	BOOL  shift 6
+	STRING  shift 7
+	'}'  reduce 12
+
+	type  goto 9
+	decl  goto 29
+	dList  goto 35
+
+
+state 30
+	declStruct : STRUCT IDENT $$2 '{' dList . '}' ';'  (10)
+
+	'}'  shift 36
+	.  error
+
+
+state 31
+	TArray : '[' NUM ']' . TArray  (18)
+	TArray : .  (19)
+
+	'['  shift 20
+	IDENT  reduce 19
+
+	TArray  goto 37
+
+
+state 32
+	decl : type $$3 TArray Lid ';' .  (14)
+
+	.  reduce 14
+
+
+state 33
+	Lid : Lid ',' . id  (15)
+
+	IDENT  shift 25
+	.  error
+
+	id  goto 38
+
+
+state 34
+	main : VOID MAIN '(' ')' . bloco  (25)
+
+	'{'  shift 39
+	.  error
+
+	bloco  goto 40
+
+
+state 35
+	dList : decl dList .  (11)
+
+	.  reduce 11
+
+
+state 36
+	declStruct : STRUCT IDENT $$2 '{' dList '}' . ';'  (10)
+
+	';'  shift 41
+	.  error
+
+
+state 37
+	TArray : '[' NUM ']' TArray .  (18)
+
+	.  reduce 18
+
+
+state 38
+	Lid : Lid ',' id .  (15)
+
+	.  reduce 15
+
+
+state 39
+	bloco : '{' . listacmd '}'  (26)
+	listacmd : .  (28)
+
+	.  reduce 28
+
+	listacmd  goto 42
+
+
+state 40
+	main : VOID MAIN '(' ')' bloco .  (25)
+
+	.  reduce 25
+
+
+state 41
+	declStruct : STRUCT IDENT $$2 '{' dList '}' ';' .  (10)
+
+	.  reduce 10
+
+
+state 42
+	bloco : '{' listacmd . '}'  (26)
+	listacmd : listacmd . cmd  (27)
+
+	IDENT  shift 43
+	NUM  shift 44
+	IF  shift 45
+	'}'  shift 46
+	'('  shift 47
+	.  error
+
+	exp  goto 48
+	cmd  goto 49
+
+
+state 43
+	exp : IDENT .  (36)
+
+	.  reduce 36
+
+
+state 44
+	exp : NUM .  (34)
+
+	.  reduce 34
+
+
+state 45
+	cmd : IF . '(' exp ')' cmd  (30)
+
+	'('  shift 50
+	.  error
+
+
+state 46
+	bloco : '{' listacmd '}' .  (26)
+
+	.  reduce 26
+
+
+state 47
+	exp : '(' . exp ')'  (35)
+
+	IDENT  shift 43
+	NUM  shift 44
+	'('  shift 47
+	.  error
+
+	exp  goto 51
+
+
+state 48
+	cmd : exp . ';'  (29)
+	exp : exp . '+' exp  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp . AND exp  (33)
+	exp : exp . '=' exp  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	AND  shift 52
+	'='  shift 53
+	'>'  shift 54
+	'+'  shift 55
+	'['  shift 56
+	'.'  shift 57
+	';'  shift 58
+	.  error
+
+
+state 49
+	listacmd : listacmd cmd .  (27)
+
+	.  reduce 27
+
+
+state 50
+	cmd : IF '(' . exp ')' cmd  (30)
+
+	IDENT  shift 43
+	NUM  shift 44
+	'('  shift 47
+	.  error
+
+	exp  goto 59
+
+
+state 51
+	exp : exp . '+' exp  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp . AND exp  (33)
+	exp : '(' exp . ')'  (35)
+	exp : exp . '=' exp  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	AND  shift 52
+	'='  shift 53
+	'>'  shift 54
+	'+'  shift 55
+	'['  shift 56
+	'.'  shift 57
+	')'  shift 60
+	.  error
+
+
+state 52
+	exp : exp AND . exp  (33)
+
+	IDENT  shift 43
+	NUM  shift 44
+	'('  shift 47
+	.  error
+
+	exp  goto 61
+
+
+state 53
+	exp : exp '=' . exp  (37)
+
+	IDENT  shift 43
+	NUM  shift 44
+	'('  shift 47
+	.  error
+
+	exp  goto 62
+
+
+state 54
+	exp : exp '>' . exp  (32)
+
+	IDENT  shift 43
+	NUM  shift 44
+	'('  shift 47
+	.  error
+
+	exp  goto 63
+
+
+state 55
+	exp : exp '+' . exp  (31)
+
+	IDENT  shift 43
+	NUM  shift 44
+	'('  shift 47
+	.  error
+
+	exp  goto 64
+
+
+state 56
+	exp : exp '[' . exp ']'  (38)
+
+	IDENT  shift 43
+	NUM  shift 44
+	'('  shift 47
+	.  error
+
+	exp  goto 65
+
+
+state 57
+	exp : exp '.' . IDENT  (39)
+
+	IDENT  shift 66
+	.  error
+
+
+state 58
+	cmd : exp ';' .  (29)
+
+	.  reduce 29
+
+
+state 59
+	cmd : IF '(' exp . ')' cmd  (30)
+	exp : exp . '+' exp  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp . AND exp  (33)
+	exp : exp . '=' exp  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	AND  shift 52
+	'='  shift 53
+	'>'  shift 54
+	'+'  shift 55
+	'['  shift 56
+	'.'  shift 57
+	')'  shift 67
+	.  error
+
+
+state 60
+	exp : '(' exp ')' .  (35)
+
+	.  reduce 35
+
+
+state 61
+	exp : exp . '+' exp  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp . AND exp  (33)
+	exp : exp AND exp .  (33)
+	exp : exp . '=' exp  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	'['  shift 56
+	'.'  shift 57
+	AND  reduce 33
+	'='  reduce 33
+	'>'  reduce 33
+	'+'  reduce 33
+	';'  reduce 33
+	']'  reduce 33
+	')'  reduce 33
+
+
+state 62
+	exp : exp . '+' exp  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp . AND exp  (33)
+	exp : exp . '=' exp  (37)
+	exp : exp '=' exp .  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	AND  shift 52
+	'='  shift 53
+	'>'  shift 54
+	'+'  shift 55
+	'['  shift 56
+	'.'  shift 57
+	';'  reduce 37
+	']'  reduce 37
+	')'  reduce 37
+
+
+state 63
+	exp : exp . '+' exp  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp '>' exp .  (32)
+	exp : exp . AND exp  (33)
+	exp : exp . '=' exp  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	AND  shift 52
+	'+'  shift 55
+	'['  shift 56
+	'.'  shift 57
+	'='  reduce 32
+	';'  reduce 32
+	']'  reduce 32
+	')'  reduce 32
+
+
+state 64
+	exp : exp . '+' exp  (31)
+	exp : exp '+' exp .  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp . AND exp  (33)
+	exp : exp . '=' exp  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	AND  shift 52
+	'['  shift 56
+	'.'  shift 57
+	'='  reduce 31
+	'>'  reduce 31
+	'+'  reduce 31
+	';'  reduce 31
+	']'  reduce 31
+	')'  reduce 31
+
+
+state 65
+	exp : exp . '+' exp  (31)
+	exp : exp . '>' exp  (32)
+	exp : exp . AND exp  (33)
+	exp : exp . '=' exp  (37)
+	exp : exp . '[' exp ']'  (38)
+	exp : exp '[' exp . ']'  (38)
+	exp : exp . '.' IDENT  (39)
+
+	AND  shift 52
+	'='  shift 53
+	'>'  shift 54
+	'+'  shift 55
+	'['  shift 56
+	'.'  shift 57
+	']'  shift 68
+	.  error
+
+
+state 66
+	exp : exp '.' IDENT .  (39)
+
+	.  reduce 39
+
+
+state 67
+	cmd : IF '(' exp ')' . cmd  (30)
+
+	IDENT  shift 43
+	NUM  shift 44
+	IF  shift 45
+	'('  shift 47
+	.  error
+
+	exp  goto 48
+	cmd  goto 69
+
+
+state 68
+	exp : exp '[' exp ']' .  (38)
+
+	.  reduce 38
+
+
+state 69
+	cmd : IF '(' exp ')' cmd .  (30)
+
+	.  reduce 30
+
+
+Rules never reduced:
+	declStructList : declStruct declStructList  (7)
+	declStructList :  (8)
+
+
+26 terminals, 20 nonterminals
+40 grammar rules, 70 states
